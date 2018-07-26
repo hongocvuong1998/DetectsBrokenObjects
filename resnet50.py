@@ -86,27 +86,16 @@ class ResNet50(chainer.Chain):
     def __init__(self):
         super(ResNet50, self).__init__()
         with self.init_scope():
-            self.conv1 = L.Convolution2D(3, 64, 7, 2, 3, initialW=initializers.HeNormal())
+            self.conv1 = L.Convolution2D(1, 64, 7, 2, 3, initialW=initializers.HeNormal())
             self.bn1 = L.BatchNormalization(64)
             self.res2 = Block(3, 64, 64, 256, 1)
             self.res3 = Block(4, 256, 128, 512)
             self.res4 = Block(6, 512, 256, 1024)
             self.res5 = Block(3, 1024, 512, 2048)
-            self.fc = L.Linear(204800, 2)
+            self.fc = L.Linear(8192, 2)
 
-    def __call__(self, x, t):
-        h = self.bn1(self.conv1(x))
-        h = F.max_pooling_2d(F.relu(h), 3, stride=2)
-        h = self.res2(h)
-        h = self.res3(h)
-        h = self.res4(h)
-        h = self.res5(h)
-        h = F.average_pooling_2d(h, 7, stride=1)
-        h = self.fc(h)
-        loss = F.softmax_cross_entropy(h, t)
-        chainer.report({'loss': loss, 'accuracy': F.accuracy(h, t)}, self)
-        return loss
-    def predictor(self, x):
+    #def __call__(self, x, t):
+    def __call__(self, x):
         h = self.bn1(self.conv1(x))
         h = F.max_pooling_2d(F.relu(h), 3, stride=2)
         h = self.res2(h)
@@ -116,6 +105,19 @@ class ResNet50(chainer.Chain):
         h = F.average_pooling_2d(h, 7, stride=1)
         h = self.fc(h)
         return h
+    #     loss = F.softmax_cross_entropy(h, t)
+    #     chainer.report({'loss': loss, 'accuracy': F.accuracy(h, t)}, self)
+    #     return loss
+    # def predictor(self, x):
+    #     h = self.bn1(self.conv1(x))
+    #     h = F.max_pooling_2d(F.relu(h), 3, stride=2)
+    #     h = self.res2(h)
+    #     h = self.res3(h)
+    #     h = self.res4(h)
+    #     h = self.res5(h)
+    #     h = F.average_pooling_2d(h, 7, stride=1)
+    #     h = self.fc(h)
+    #     return h
 
 
 class ResNeXt50(ResNet50):
@@ -126,10 +128,10 @@ class ResNeXt50(ResNet50):
         chainer.Chain.__init__(self)
         with self.init_scope():
             self.conv1 = L.Convolution2D(
-                3, 64, 7, 2, 3, initialW=initializers.HeNormal())
+                1, 64, 7, 2, 3, initialW=initializers.HeNormal())
             self.bn1 = L.BatchNormalization(64)
             self.res2 = Block(3, 64, 128, 256, 1, groups=32)
             self.res3 = Block(4, 256, 256, 512, groups=32)
             self.res4 = Block(6, 512, 512, 1024, groups=32)
             self.res5 = Block(3, 1024, 1024, 2048, groups=32)
-            self.fc = L.Linear(2048, 1000)
+            self.fc = L.Linear(8192, 1000)
